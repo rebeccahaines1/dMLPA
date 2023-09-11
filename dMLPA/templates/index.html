@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>project2 Web App</title>
+    <!-- Bootstrap CSS library for styling and UI components -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <!-- jQuery library: required for Bootstrap's JavaScript plugins -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+
+    <!-- Popper.js library: required for some of Bootstrap's JavaScript features like dropdowns and tooltips -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+
+    <!-- Bootstrap's JavaScript library: provides interactive UI components -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>dMLPA Web App</h1>
+    </div>
+
+    <div class="container">
+
+         {% if errors %} 
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">Spreadsheet Errors:</h4>
+            <ul>
+                 {% for error in errors %} 
+                <li> {{ error }}  </li>
+                 {% endfor %} 
+            </ul>
+        </div>
+         {% endif %} 
+
+         {% if file_errors %} 
+        <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading">File Errors:</h4>
+            <ul>
+                 {% for field, errors in file_errors.items() %} 
+                 {% for error in errors %} 
+                <li> {{ error }}  </li>
+                 {% endfor %} 
+                 {% endfor %} 
+            </ul>
+        </div>
+         {% endif %} 
+
+         {% if backend_state == "initial" %} 
+        <div class="alert alert-dark" role="alert">
+            <h4 class="alert-heading">Welcome to dMLPA</h4>
+            <p>Please select the files for your analysis below, then click
+                the "Run dMLPA" button.</p>
+        </div>
+        <div class="container">
+            <h4>dMLPA File Upload</h4>
+            <form
+                action=" {{ url_for('dMLPA.form') }}  "
+                method="post" enctype="multipart/form-data">
+                 {{ form.hidden_tag() }} 
+                <div class="row">
+                    <div class="col-sm-6 form-group">
+                         {{ form.single_file.label }}  <br>
+                         {{ form.single_file(class="form-control-file") }} 
+                    </div>
+                    <div class="col-sm-6 form-group">
+                         {{ form.multiple_array_of_files.label }}  <br>
+                         {{ form.multiple_array_of_files(class="form-control-file", multiple=true) }} 
+                    </div>
+                </div>
+                 {{ form.submit(class="btn btn-primary btn-lg btn-block") }} 
+            </form>
+        </div>
+
+         {%elif backend_state == "started" %} 
+        <div class="alert alert-success" role="alert">
+            <h4 class="alert-heading">dMLPA Analysis Complete</h4>
+            <p>You submitted the following single file: </p>
+            <p style="color:blue;"> {{ single_file_name }}  </p>
+            <p>You submitted the following multiple files:</p>
+            <p style="color:blue;"> {{ multiple_array_of_files_names }}  </p>
+            <hr>
+            <h4>The following output can be downloaded to your computer using the button below:</h4>
+            <p style="color:blue;"> {{ report_name }}  </p>
+            <br>
+            <a class="btn btn-success"
+                href=" {{url_for('dMLPA.download')}}  ">Download</a>
+            <hr>
+            <p class="mb-0">If you have any issues with this tool please raise a ticket with Genome Support.</p>
+        </div>
+    </div>
+
+     {%elif backend_state == "finished" %} 
+
+    <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading">Analysis Completed!</h4>
+        <p>The report can be downloaded to your computer using the button below.</p>
+        <br>
+        <a class="btn btn-success"
+            href=" {{url_for('dMLPA.download')}}  ">Download
+            Report</a>
+        <hr>
+        <p class="mb-0">If you have any issues with this tool please raise a ticket with Genome Support.</p>
+    </div>
+
+     {%elif backend_state == "failed" %} 
+
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">WARNING!</h4>
+        <p>Backend has failed with the following error:</p>
+        <hr>
+        <p class="mb-0"> ERROR: <br> If you require any help please raise a ticket with Genome Support.
+        </p>
+    </div>
+     {%endif %} 
+    </div>
+
+     {% block scripts %} 
+    <script>
+        console.log("Script is running");
+        function getFileExtension(filename) {
+            return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2);
+        }
+
+        function validateFileType(inputElement, allowedExtensions) {
+            const files = inputElement.files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const extension = getFileExtension(file.name).toLowerCase();
+                if (!allowedExtensions.includes(extension)) {
+                    alert(`Invalid file type for '${file.name}'. Allowed types are: ${allowedExtensions.join(", ")}`);
+                    inputElement.value = "";
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        document.getElementById("single_file").addEventListener("change", function () {
+            validateFileType(this, ["xlsx"]); // TODO Add more file extensions here i.e. ["xlsm", "xlsx"]
+        });
+
+        document.getElementById("multiple_array_of_files").addEventListener("change", function () {
+            validateFileType(this, ["xlsx"]); // TODO Add more file extensions here i.e. ["xlsm", "xlsx"]
+        });
+    </script>
+     {% endblock %} 
+
+
+
+</body>

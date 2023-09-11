@@ -1,0 +1,39 @@
+# pull official base image
+FROM python:3.10.6-slim-buster
+
+# set working directory
+WORKDIR /dMLPA/dMLPA
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV FLASK_DEBUG 1
+ENV FLASK_APP=/dMLPA/app.py
+ENV PYTHONPATH=/dMLPA/dMLPA
+ENV SESSION_FILE_DIR /var/local/dMLPA/flask_sessions
+ENV SCRIPT_NAME=dMLPA
+ENV UPLOAD_FOLDER /var/local/dMLPA/uploads
+ENV FLASK_DEBUG=1 
+# only for development
+
+# add and install requirements
+COPY ./requirements.txt .
+RUN pip3 install -r requirements.txt
+USER 0 
+RUN mkdir -p /var/local/dMLPA/logs/
+RUN mkdir -p /var/local/dMLPA/uploads/
+RUN mkdir -p /var/local/dMLPA/flask_sessions/
+RUN chmod 777 /var/local/dMLPA/logs/
+RUN chmod 777 /var/local/dMLPA/uploads/
+RUN chmod 777 /var/local/dMLPA/flask_sessions/
+
+USER $CONTAINER_USER_ID
+
+RUN pip install debugpy
+
+# add app
+COPY . .
+
+# run server
+CMD python -m debugpy --wait-for-client --listen 0.0.0.0:5678 -m flask run --host=0.0.0.0
+

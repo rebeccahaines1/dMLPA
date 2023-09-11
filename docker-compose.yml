@@ -1,0 +1,21 @@
+version: '3.3'
+
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.development
+    volumes:
+      - .:/dMLPA/
+      - /var/local/dMLPA/logs/:/var/local/dMLPA/logs/
+      - /var/local/dMLPA/uploads/:/var/local/dMLPA/uploads/
+
+    ports:
+      - 5001:5000
+      - 5678:5678
+    environment:
+      - FLASK_APP=/dMLPA/dMLPA/app.py
+      - FLASK_DEBUG=1
+      - FLASK_ENV=development
+      - PYTHONPATH=/dMLPA/dMLPA
